@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Book = require("../models/bookmodel");
+const Author = require("../models/authormodel");
 const mongoose = require("mongoose");
 const { constants } = require("../constants");
 //@desc Get all Books
@@ -22,10 +23,10 @@ const createBook = asyncHandler(async (req, res) => {
   }
 
   const book = await Book.create({
-    title,
+    title: title.toUpperCase(),
     authorId,
     yearPublished,
-    genre
+    genre: genre.toUpperCase()
   });
 
   res.status(constants.CREATE).json(book);
@@ -39,7 +40,6 @@ const getBook = asyncHandler(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid book ID' });
   }
-  console.log('find book');
   const book = await Book.findById(req.params.id);
   if (!book) {
     res.status(constants.NOT_FOUND);
@@ -48,17 +48,17 @@ const getBook = asyncHandler(async (req, res) => {
   res.status(constants.OK).json(book);
 });
 
-//@desc get a list of all books by a author lives in a city and in a date range
+//@desc get a list of all books by a author lives in a city and in a date range. Can also filter by city only or date range only
 // @route get /api/books/search/:authorId?city=city&startDate=startDate&endDate=endDate
 // @access private
-const getBooksByCityAndDate = asyncHandler(async (req, res) => {
-  const { authorId } = req.params;
+const getBooksByIdAndCityAndDate = asyncHandler(async (req, res) => {
+  const authorId = req.params.id;
   const { city, startDate, endDate } = req.query;
 
   if (!mongoose.Types.ObjectId.isValid(authorId)) {
     return res.status(constants.VALIDATION_ERROR).json({ error: 'Invalid author ID' });
   }
-
+  
   // Validate startDate and endDate
   if ((startDate && !endDate) || (!startDate && endDate)) {
     return res.status(constants.VALIDATION_ERROR).json({ error: 'Both startDate and endDate must be provided' });
@@ -69,12 +69,20 @@ const getBooksByCityAndDate = asyncHandler(async (req, res) => {
   }
 
   // Construct query conditions
-  const query = { authorId };
+  let query;
+  // Query authors who live in a city
   if (city) {
-    query['author.city'] = city;
+    const authorsInCity = await Author.find({ city: city.toUpperCase() }, '_id');
+    // Extract author IDs from the result
+  const authorIds = authorsInCity.map(author => author._id);
+
+    query = { authorId: { $in: authorIds } };
+  } else {
+    query = { authorId };
   }
+  
   if (startDate && endDate) {
-    query.yearPublished = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    query.yearPublished = { $gte: parseInt(new Date(startDate).getFullYear()), $lte: parseInt(new Date(endDate).getFullYear()) };
   }
 
   // Fetch books based on the constructed query
@@ -122,7 +130,7 @@ module.exports = {
   getBooks,
   createBook,
   getBook,
-  getBooksByCityAndDate,
+  getBooksByIdAndCityAndDate,
   updateBook,
   deleteBook,
 };

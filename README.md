@@ -47,3 +47,5 @@ Ensure git and node js are install
    set ACCESS_TOKEN_SECRET=your_secret_key
 
 5. After installation is complete, you can start the REST server by running `npm start`.
+
+NB: A postman configuration file is present in the project which could permit to do some test.

@@ -23,9 +23,9 @@ const createAuthor = asyncHandler(async (req, res) => {
   }
 
   const author = await Author.create({
-    name,
+    name: name.toUpperCase(),
     born,
-    city
+    city: city.toUpperCase()
   });
 
   res.status(constants.CREATE).json(author);
