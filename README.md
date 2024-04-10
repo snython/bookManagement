@@ -32,7 +32,7 @@ Ensure git and node js are install
 1. Clone this repository to your local machine:
 
    ```bash
-   git clone https://github.com/pirjademl/Book-mgmt-rest-api.git
+   git clone https://github.com/snython/bookManagement.git
 
 2. Open terminal.
 
