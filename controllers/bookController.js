@@ -55,8 +55,17 @@ const getBooksByCityAndDate = asyncHandler(async (req, res) => {
   const { authorId } = req.params;
   const { city, startDate, endDate } = req.query;
 
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+  if (!mongoose.Types.ObjectId.isValid(authorId)) {
     return res.status(constants.VALIDATION_ERROR).json({ error: 'Invalid author ID' });
+  }
+
+  // Validate startDate and endDate
+  if ((startDate && !endDate) || (!startDate && endDate)) {
+    return res.status(constants.VALIDATION_ERROR).json({ error: 'Both startDate and endDate must be provided' });
+  }
+
+  if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+    return res.status(constants.VALIDATION_ERROR).json({ error: 'startDate cannot be greater than endDate' });
   }
 
   // Construct query conditions
