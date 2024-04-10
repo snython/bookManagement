@@ -2,21 +2,22 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { constants } = require("../constants");
 //@desc Register a user
-// @route POST /api/user/register
+// @route POST /api/users/register
 // @access public
 const registerUser = asyncHandler(async (req, res) => {
   const { name: name, email, password } = req.body;
 
   // checks if the variable name, email and password is falsy. 
   if (!name || !email || !password) {
-    res.status(400);
+    res.status(constants.VALIDATION_ERROR);
     throw new Error("All fields are mandatory");
   }
   // check if user exist
   const userAvailable = await User.findOne({ email });
   if (userAvailable) {
-    res.status(400);
+    res.status(constants.VALIDATION_ERROR);
     throw new Error("User already exists");
   }
   // Hash the password
@@ -29,27 +30,28 @@ const registerUser = asyncHandler(async (req, res) => {
   });
   console.log(`User created ${user} `);
   if (user) {
-    res.status(201).json({
+    res.status(constants.CREATE).json({
       _id: user.id,
       email: user.email,
       name: user.name,
     });
   } else {
-    res.status(400);
+    res.status(constants.VALIDATION_ERROR);
     throw new Error("Invalid user data");
   }
 
   res.json({
-    message: "register the user ",
+    message: "User regiser sucessfully ",
   });
 });
+
 //@desc Login a user
-// @route POST /api/user/login
+// @route POST /api/users/login
 // @access public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(400);
+    res.status(constants.VALIDATION_ERROR);
     throw new Error("All fields are mandatory");
   }
   // check if the user exist and get the user details
@@ -70,9 +72,9 @@ const loginUser = asyncHandler(async (req, res) => {
         expiresIn: "1d",
       }
     );
-    res.status(200).json({ accessToken });
+    res.status(constants.OK).json({ accessToken });
   } else {
-    res.status(401);
+    res.status(constants.UNAUTHORIZED);
     throw new Error("Invalid email or password");
   }
 });
